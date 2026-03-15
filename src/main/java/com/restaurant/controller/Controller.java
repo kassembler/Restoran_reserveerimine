@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.restaurant.model.Table;
 import com.restaurant.service.Recommendation;
 
+// template: https://spring.io/guides/gs/spring-boot
 @RestController
 @RequestMapping("/api")
 public class Controller {
@@ -27,40 +28,51 @@ public class Controller {
 
     @GetMapping("/tables")
     public List<Map<String,Object>> getTables(
-            @RequestParam int people,
-            @RequestParam(defaultValue="false") boolean window,
-            @RequestParam(defaultValue="false") boolean quiet){
+        @RequestParam int people,
+        @RequestParam(defaultValue="false") boolean window,
+        @RequestParam(defaultValue="false") boolean quiet,
+        @RequestParam(defaultValue="false") boolean outside)
+{
 
-        List<Map<String,Object>> result = new ArrayList<>();
+    List<Map<String,Object>> result = new ArrayList<>();
+    List<Map<String,Object>> validTables = new ArrayList<>();
 
-        int bestScore = -999;
+    int bestScore = Integer.MIN_VALUE;
 
-        for(Table t : recommendationService.tables){
+    for(Table t : recommendationService.tables){
+        boolean reserved = recommendationService.isReserved(t.id);
+        int score = recommendationService.score(t, people, window, quiet, outside);
 
-            boolean reserved = recommendationService.isReserved(t.id);
+        Map<String,Object> map = new HashMap<>();
+        map.put("id", t.id);
+        map.put("reserved", reserved);
+        map.put("score", score);
 
-            int score = recommendationService.score(t, people, window, quiet);
+        result.add(map);
 
-            bestScore = Math.max(bestScore, score);
-
-            Map<String,Object> map = new HashMap<>();
-
-            map.put("id", t.id);
-            map.put("x", t.x);
-            map.put("y", t.y);
-            map.put("reserved", reserved);
-            map.put("score", score);
-
-            result.add(map);
+        // only consider valid tables for recommendation
+        if(score > Integer.MIN_VALUE){
+            validTables.add(map);
+            if(score > bestScore){
+                bestScore = score;
+            }
         }
-
-        for(Map m : result){
-            if((int)m.get("score") == bestScore)
-                m.put("recommended", true);
-            else
-                m.put("recommended", false);
-        }
-
-        return result;
     }
+
+    // mark recommended only among valid tables
+    for(Map m : validTables){
+        if((int)m.get("score") == bestScore){
+            m.put("recommended", true);
+        } else {
+            m.put("recommended", false);
+        }
+    }
+
+    // ensure all other tables have recommended=false
+    for(Map m : result){
+        m.putIfAbsent("recommended", false);
+    }
+
+    return result;
+}
 }

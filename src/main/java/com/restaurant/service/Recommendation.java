@@ -23,31 +23,33 @@ public class Recommendation {
     @PostConstruct
     public void init() {
 
-        // create tables
-        for(int i=0;i<12;i++){
+    tables.add(new Table(0, 4,  false,  false, true));
+    tables.add(new Table(1, 4,  false, true, true));
+    tables.add(new Table(2, 4,  false,  true, true));
+    tables.add(new Table(3, 4,  false, false, true));
+    tables.add(new Table(4, 4,  false,  false, true));
+    tables.add(new Table(5, 4,  false, true, true));
+    tables.add(new Table(6, 4,  false,  true, true));
+    tables.add(new Table(7, 2,  true, false, false));
+    tables.add(new Table(8, 2,  false, false, false));
+    tables.add(new Table(9, 2,  false, false, false));
+    tables.add(new Table(10, 2,  false, false, false));
+    tables.add(new Table(11, 2,  true, false, false));
+    tables.add(new Table(12, 14,  false, false, false));
 
-            Table t = new Table();
-            t.id = i;
-            t.capacity = (i%4)+2;
-            t.x = i%4;
-            t.y = i/4;
+    for(int i = 0; i < 5; i++){
 
-            t.window = random.nextBoolean();
-            t.quiet = random.nextBoolean();
+        int tableId = random.nextInt(tables.size());
 
-            tables.add(t);
-        }
+        if(isReserved(tableId)) continue;
 
-        // random reservations
-        for(int i=0;i<5;i++){
+        Reservation r = new Reservation();
+        r.tableId = tableId;
+        r.time = LocalDateTime.now().withMinute(0).withSecond(0);
+        r.people = random.nextInt(6) + 1;
 
-            Reservation r = new Reservation();
-            r.tableId = random.nextInt(12);
-            r.time = LocalDateTime.now().withMinute(0).withSecond(0);
-            r.people = 2;
-
-            reservations.add(r);
-        }
+        reservations.add(r);
+    }
     }
 
     public boolean isReserved(int tableId){
@@ -61,36 +63,34 @@ public class Recommendation {
 
         return false;
     }
-    public int score(Table t, int people, boolean wantWindow, boolean wantQuiet) {
+    public int score(Table t, int people, boolean wantWindow, boolean wantQuiet, boolean wantOutside) {
 
-    // if table is already reserved → very bad option
-    if (isReserved(t.id)) {
-        return -1000;
+    // reject undersized tables
+    if (t.capacity < people || isReserved(t.id)) {
+        return Integer.MIN_VALUE; // will never be recommended
     }
 
     int score = 0;
 
-    // capacity check
-    if (t.capacity < people) {
-        score -= 100; // table too small
-    } else {
-        // prefer tables close to the group size
-        score += 20 - (t.capacity - people) * 2;
-    }
+    // prefer tables close to the group size
+    score += 20 - (t.capacity - people) * 2;
 
     // window preference
     if (wantWindow) {
-        if (t.window) score += 10;
-        else score -= 5;
+        score += t.window ? 10 : -5;
     }
 
     // quiet preference
     if (wantQuiet) {
-        if (t.quiet) score += 10;
-        else score -= 5;
+        score += t.quiet ? 10 : -5;
+    }
+
+    // outside preference
+    if (wantOutside) {
+        score += t.outside ? 10 : -5;
     }
 
     return score;
-}
+    }
 
 }
