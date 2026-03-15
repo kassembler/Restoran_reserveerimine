@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "restaurant",
+            "request": "launch",
+            "mainClass": "com.restaurant.restaurant",
+            "projectName": "restaurant"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-restaurant<restaurant>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "restaurant",
+            "projectName": "restaurant",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
