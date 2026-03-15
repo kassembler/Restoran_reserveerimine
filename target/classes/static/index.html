@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Table reservation prototype</h2>
+
+People:
+<input id="people" type="number" value="2">
+
+Date:
+<input id="date" type="date">
+
+Time:
+<input id="date" type="time">
+
+<label>
+<input type="checkbox" id="window">
+Window
+</label>
+
+<label>
+<input type="checkbox" id="quiet">
+Quiet
+</label>
+
+<label>
+<input type="checkbox" id="location">
+Outside
+</label>
+
+<button onclick="load()">Search</button>
+<div id="floor">
+
+<div id="table-0" class="table">1</div>
+<div id="table-1" class="table">2</div>
+<div id="table-2" class="table">3</div>
+<div id="table-3" class="table">4</div>
+<div id="table-4" class="table">5</div>
+<div id="table-5" class="table">6</div>
+<div id="table-6" class="table">7</div>
+<div id="table-7" class="table">8</div>
+<div id="table-8" class="table">9</div>
+<div id="table-9" class="table">10</div>
+<div id="table-10" class="table">11</div>
+<div id="table-11" class="table">12</div>
+<div id="table-12" class="table">13</div>
+
+</div>
+
+<script>
+
+function load(){
+
+let people = document.getElementById("people").value
+let windowPref = document.getElementById("window").checked
+let quiet = document.getElementById("quiet").checked
+let location = document.getElementById("location").checked
+
+fetch(`/api/tables?people=${people}&window=${windowPref}&quiet=${quiet}`)
+.then(r => r.json())
+.then(data => {
+
+let floor = document.getElementById("floor")
+
+data.forEach(t => {
+    let el = document.getElementById(`table-${t.id}`)
+    if(!el) return
+
+    // reset classes
+    el.classList.remove("free","reserved","recommended")
+
+    if(t.reserved) el.classList.add("reserved")
+    else el.classList.add("free")
+
+    if(t.recommended && !t.reserved) el.classList.add("recommended")
+})
+
+})
+.catch(err => console.error("API error:", err))
+
+}
+
+load()
+
+</script>
+
+</body>
+</html>
